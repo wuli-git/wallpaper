@@ -1,0 +1,14 @@
+view,swiper,swiper-item{
+	box-sizing: border-box;
+}
+// 背景渐变色
+.pageBg{
+	background:
+	linear-gradient(to bottom,rgba(0,0,0,0) ,#fff 400rpx),
+	linear-gradient(to right,#beecd8 20%,#F4E2D8);
+	min-height: 80vh;
+}
+
+.loadingLayout{
+	padding: 30rpx 0;
+}
