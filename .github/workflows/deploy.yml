@@ -1,0 +1,26 @@
+# 流水线名称（可自定义，随便写）
+name: wallpaper CI/CD
+
+# 触发条件：当代码推送到 master 分支时自动运行
+on:
+  push:
+    branches: [ main ]  # 你的分支名：master / main 按需修改
+
+# 执行任务
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest  # 运行环境：固定写 ubuntu-latest 即可
+    steps:
+      # 步骤1：从 GitHub 拉取最新代码
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      # 步骤2：自动部署到 GitHub Pages（上线）
+      - name: 部署到 GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: $  # GitHub 自动提供的密钥，不用改
+          publish_dir: ./  # 要上线的文件夹：
+                           # ./ = 整个项目, 首页需命名为index.html
+                           # ./dist = Vue/React 打包目录
+                           # ./html = 网页目录（按需改）
