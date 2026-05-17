@@ -19,7 +19,7 @@ jobs:
       - name: 部署到 GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: $  # GitHub 自动提供的密钥，不用改
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # GitHub 自动提供的密钥，不用改
           publish_dir: ./dist  # 要上线的文件夹：
                            # ./ = 整个项目, 首页需命名为index.html
                            # ./dist = Vue/React 打包目录
