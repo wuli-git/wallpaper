@@ -403,7 +403,7 @@
 					flex-direction: column;
 					align-items: center;
 					justify-content: center;
-					.padding: 2rpx 12rpx;
+					padding: 2rpx 12rpx;
 
 					.text {
 						font-size: 26rpx;

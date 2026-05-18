@@ -1,11 +1,25 @@
 {
   "name": "wallpaper",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "build:h5": "npx @dcloudio/cli build -p h5"
+    "dev:h5": "uni",
+    "build:h5": "uni build"
+  },
+  "dependencies": {
+    "@dcloudio/uni-app": "3.0.0-5000720260410001",
+    "@dcloudio/uni-h5": "3.0.0-5000720260410001",
+    "@dcloudio/uni-components": "3.0.0-5000720260410001",
+    "@dcloudio/uni-i18n": "3.0.0-5000720260410001",
+    "vue": "3.4.21"
   },
   "devDependencies": {
-    "@dcloudio/cli": "^3.0.0-alpha-4070520250219001"
+    "@dcloudio/types": "3.4.28",
+    "@dcloudio/vite-plugin-uni": "3.0.0-5000720260410001",
+    "@vitejs/plugin-vue": "5.2.4",
+    "@vue/compiler-sfc": "3.4.21",
+    "sass": "^1.77.8",
+    "vite": "5.2.8"
   }
 }

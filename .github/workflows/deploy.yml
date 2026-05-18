@@ -25,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
           cache: npm
 
       - name: Install dependencies
@@ -34,6 +34,9 @@ jobs:
       - name: Build H5
         run: npm run build:h5
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Detect build output path
         id: detect
         run: |
@@ -41,14 +44,18 @@ jobs:
             echo "path=dist/build/h5" >> "$GITHUB_OUTPUT"
           elif [ -d "unpackage/dist/build/h5" ]; then
             echo "path=unpackage/dist/build/h5" >> "$GITHUB_OUTPUT"
+          elif [ -d "dist" ]; then
+            echo "path=dist" >> "$GITHUB_OUTPUT"
           else
-            echo "Build output not found."
-            echo "Checked: dist/build/h5 and unpackage/dist/build/h5"
+            echo "Build output not found"
             ls -la
             ls -la dist || true
             ls -la unpackage || true
             exit 1
           fi
+
+      - name: Create Pages fallback
+        run: cp "${{ steps.detect.outputs.path }}/index.html" "${{ steps.detect.outputs.path }}/404.html"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
