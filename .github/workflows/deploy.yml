@@ -29,17 +29,10 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install
-
-      - name: Show workspace before build
-        run: |
-          pwd
-          ls -la
-          ls -la dist || true
-          ls -la unpackage || true
+        run: npm ci
 
       - name: Build H5
-        run: npx @dcloudio/cli build -p h5
+        run: npm run build:h5
 
       - name: Detect build output path
         id: detect
@@ -56,14 +49,6 @@ jobs:
             ls -la unpackage || true
             exit 1
           fi
-
-      - name: Show selected artifact path
-        run: |
-          echo "Selected path: ${{ steps.detect.outputs.path }}"
-          ls -la "${{ steps.detect.outputs.path }}"
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

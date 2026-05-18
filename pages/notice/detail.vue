@@ -2,14 +2,14 @@
 	<view class="noticeLayout">
 		<view class="title">
 			<view class="tag">
-				<uni-tag inverted text="置顶"type="error"/>
+				<uni-tag inverted text="置顶" type="error"/>
 			</view>
-			<view class="font"零儿爱喵喵壁纸</view>
+			<view class="font">零儿爱喵喵壁纸</view>
 		</view>
 		<view class="info">
 			<view class="item">零儿爱喵喵</view>
 			<view class="item">
-				<uni-dateformat :date="Date.now()"format="yyyy-MM-dd hh:mm:ss">
+				<uni-dateformat :date="Date.now()" format="yyyy-MM-dd hh:mm:ss">
 				</uni-dateformat>
 			</view>
 		</view>
@@ -26,7 +26,7 @@
 	
 </script>
 
-<style lang="scss"scoped>
+<style lang="scss" scoped>
 .noticeLayout{
 	padding:30rpx;
 	.title{

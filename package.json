@@ -1,0 +1,11 @@
+{
+  "name": "wallpaper",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build:h5": "npx @dcloudio/cli build -p h5"
+  },
+  "devDependencies": {
+    "@dcloudio/cli": "^3.0.0-alpha-4070520250219001"
+  }
+}
