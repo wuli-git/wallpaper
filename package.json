@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev:h5": "uni",
-    "prebuild:h5": "node scripts/fetch-api-cache.mjs",
     "build:h5": "uni build"
   },
   "dependencies": {

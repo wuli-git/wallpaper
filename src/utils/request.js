@@ -1,45 +1,6 @@
-const BASE_URL = 'https://tea.qingnian8.com/api/bizhi';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://tea.qingnian8.com/api/bizhi';
 const ACCESS_KEY = '1328433750wuli@';
-const CACHE_MAP = {
-	'/homeBanner': 'homeBanner',
-	'/randomWall': 'randomWall',
-	'/wallNewsList?select=true': 'wallNewsList-select',
-	'/classify?select=true': 'classify-select',
-	'/classify?pageSize=15': 'classify'
-};
-
-function appendAccessKey(url) {
-	const separator = url.includes('?') ? '&' : '?';
-	return `${url}${separator}access-key=${encodeURIComponent(ACCESS_KEY)}`;
-}
-
-function normalizeQuery(data = {}) {
-	const params = new URLSearchParams();
-	Object.keys(data).sort().forEach(key => {
-		const value = data[key];
-		if (value !== undefined && value !== null && value !== '') {
-			params.append(key, value);
-		}
-	});
-	return params.toString();
-}
-
-function getCacheName(path, data = {}, method = 'GET') {
-	if (method.toUpperCase() !== 'GET') return '';
-	const query = normalizeQuery(data);
-	return CACHE_MAP[query ? `${path}?${query}` : path] || '';
-}
-
-function requestCache(cacheName) {
-	return new Promise((resolve, reject) => {
-		if (!cacheName) return reject();
-		uni.request({
-			url: `/wallpaper/static/api-cache/${cacheName}.json`,
-			success: res => resolve(res.data),
-			fail: reject
-		})
-	})
-}
+const USE_PROXY = Boolean(import.meta.env.VITE_API_BASE_URL);
 
 export function request(config={}){	
 	let {
@@ -48,13 +9,14 @@ export function request(config={}){
 		method="GET",
 		header={}
 	} = config
-	const path = url
-	const cacheName = getCacheName(path, data, method)
 	
 	url = BASE_URL+url
 
 	// #ifdef H5
-	url = appendAccessKey(url)
+	if (!USE_PROXY) {
+		const separator = url.includes('?') ? '&' : '?';
+		url = `${url}${separator}access-key=${encodeURIComponent(ACCESS_KEY)}`;
+	}
 	// #endif
 
 	// #ifndef H5
@@ -87,12 +49,7 @@ export function request(config={}){
 				}				
 			},
 			fail:err=>{
-				// #ifdef H5
-				requestCache(cacheName).then(resolve).catch(() => reject(err))
-				// #endif
-				// #ifndef H5
 				reject(err)
-				// #endif
 			}
 		})
 	})
