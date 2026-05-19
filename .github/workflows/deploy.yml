@@ -33,7 +33,7 @@ jobs:
 
       - name: Build H5
         env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL || 'https://wallpaper-production-9537.up.railway.app/api/bizhi' }}
         run: npm run build:h5
 
       - name: Setup Pages
