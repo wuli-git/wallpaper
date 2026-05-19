@@ -6,6 +6,7 @@ const upstreamAccessKey = process.env.UPSTREAM_ACCESS_KEY || "1328433750wuli@";
 const targetOrigin = process.env.TARGET_ORIGIN || "https://tea.qingnian8.com";
 const targetPrefix = process.env.TARGET_PREFIX || "/api/bizhi";
 const proxyPrefix = process.env.PROXY_PREFIX || "/api/bizhi";
+const imageProxyPrefix = process.env.IMAGE_PROXY_PREFIX || "/proxy-image";
 
 const hopByHopHeaders = new Set([
   "connection",
@@ -64,11 +65,87 @@ function buildHeaders(requestHeaders) {
   return headers;
 }
 
+function buildImageHeaders(requestHeaders) {
+  const headers = buildHeaders(requestHeaders);
+  delete headers["access-key"];
+  headers["user-agent"] =
+    headers["user-agent"] ||
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36";
+  return headers;
+}
+
 function writeUpstreamHeaders(response, upstreamResponse) {
   for (const [key, value] of upstreamResponse.headers) {
     if (!hopByHopHeaders.has(key.toLowerCase())) {
       response.setHeader(key, value);
     }
+  }
+}
+
+function getPublicOrigin(request) {
+  const proto = request.headers["x-forwarded-proto"] || "https";
+  const host = request.headers["x-forwarded-host"] || request.headers.host;
+  return `${proto}://${host}`;
+}
+
+function shouldProxyImage(value) {
+  return (
+    typeof value === "string" &&
+    /^https:\/\/cdn\.qingnian8\.com\/.+/i.test(value)
+  );
+}
+
+function rewriteImageUrls(value, publicOrigin) {
+  if (Array.isArray(value)) {
+    return value.map((item) => rewriteImageUrls(item, publicOrigin));
+  }
+  if (value && typeof value === "object") {
+    for (const [key, item] of Object.entries(value)) {
+      value[key] = rewriteImageUrls(item, publicOrigin);
+    }
+    return value;
+  }
+  if (shouldProxyImage(value)) {
+    return `${publicOrigin}${imageProxyPrefix}?url=${encodeURIComponent(value)}`;
+  }
+  return value;
+}
+
+function isJsonResponse(response) {
+  return response.headers.get("content-type")?.includes("application/json");
+}
+
+async function writeUpstreamBody(request, response, upstreamResponse) {
+  if (isJsonResponse(upstreamResponse)) {
+    const json = await upstreamResponse.json();
+    const body = JSON.stringify(rewriteImageUrls(json, getPublicOrigin(request)));
+    response.writeHead(upstreamResponse.status, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Length": Buffer.byteLength(body),
+    });
+    response.end(body);
+    return;
+  }
+
+  writeUpstreamHeaders(response, upstreamResponse);
+  response.writeHead(upstreamResponse.status);
+
+  if (upstreamResponse.body) {
+    await upstreamResponse.body.pipeTo(
+      new WritableStream({
+        write(chunk) {
+          response.write(Buffer.from(chunk));
+        },
+        close() {
+          response.end();
+        },
+        abort(error) {
+          response.destroy(error);
+        },
+      })
+    );
+  } else {
+    response.end();
   }
 }
 
@@ -87,6 +164,46 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  const requestUrl = new URL(request.url || "/", "http://proxy.local");
+  if (requestUrl.pathname === imageProxyPrefix) {
+    const imageUrl = requestUrl.searchParams.get("url");
+    if (!imageUrl || !shouldProxyImage(imageUrl)) {
+      response.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ errCode: 400, errMsg: "Invalid image url" }));
+      return;
+    }
+
+    try {
+      const upstreamResponse = await fetch(imageUrl, {
+        headers: buildImageHeaders(request.headers),
+      });
+    writeUpstreamHeaders(response, upstreamResponse);
+    response.setHeader("Cache-Control", "public, max-age=604800, immutable");
+    response.writeHead(upstreamResponse.status);
+      if (upstreamResponse.body) {
+        await upstreamResponse.body.pipeTo(
+          new WritableStream({
+            write(chunk) {
+              response.write(Buffer.from(chunk));
+            },
+            close() {
+              response.end();
+            },
+            abort(error) {
+              response.destroy(error);
+            },
+          })
+        );
+      } else {
+        response.end();
+      }
+    } catch (error) {
+      response.writeHead(502, { "Content-Type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ errCode: 502, errMsg: error.message }));
+    }
+    return;
+  }
+
   const upstreamUrl = buildUpstreamUrl(request.url || "/");
   if (!upstreamUrl) {
     response.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
@@ -102,26 +219,7 @@ const server = http.createServer(async (request, response) => {
       body,
     });
 
-    writeUpstreamHeaders(response, upstreamResponse);
-    response.writeHead(upstreamResponse.status);
-
-    if (upstreamResponse.body) {
-      await upstreamResponse.body.pipeTo(
-        new WritableStream({
-          write(chunk) {
-            response.write(Buffer.from(chunk));
-          },
-          close() {
-            response.end();
-          },
-          abort(error) {
-            response.destroy(error);
-          },
-        })
-      );
-    } else {
-      response.end();
-    }
+    await writeUpstreamBody(request, response, upstreamResponse);
   } catch (error) {
     response.writeHead(502, { "Content-Type": "application/json; charset=utf-8" });
     response.end(JSON.stringify({ errCode: 502, errMsg: error.message }));
