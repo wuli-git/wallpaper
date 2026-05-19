@@ -49,6 +49,7 @@ export function request(config={}){
 				}				
 			},
 			fail:err=>{
+				console.error('request failed', url, err);
 				reject(err)
 			}
 		})

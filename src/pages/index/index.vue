@@ -82,25 +82,41 @@ import {onShareAppMessage} from "@dcloudio/uni-app"
 	const classifyList=ref([]);
 	
 	const getBanner=async()=>{
-		let res=await apiGetBanner();
-		bannerList.value=res.data;
+		try{
+			let res=await apiGetBanner();
+			bannerList.value=res.data || [];
+		}catch(err){
+			console.error('getBanner failed', err);
+		}
 	}
 	
 	const getDayRandom=async()=>{
-		let res=await apiGetDayRandom();
-		randomList.value=res.data;
+		try{
+			let res=await apiGetDayRandom();
+			randomList.value=res.data || [];
+		}catch(err){
+			console.error('getDayRandom failed', err);
+		}
 	}
 	
 	const getNotice=async()=>{
-		let res=await apiGetNotice({select:true});
-		noticeList.value=res.data;
+		try{
+			let res=await apiGetNotice({select:true});
+			noticeList.value=res.data || [];
+		}catch(err){
+			console.error('getNotice failed', err);
+		}
 	}
 	
 	const getClassify=async ()=>{
-		let res=await apiGetClassify({
-			select:true
-		});
-		classifyList.value=res.data;
+		try{
+			let res=await apiGetClassify({
+				select:true
+			});
+			classifyList.value=res.data || [];
+		}catch(err){
+			console.error('getClassify failed', err);
+		}
 	}
 	
 	const gopreview=(id)=>{

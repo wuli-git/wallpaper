@@ -75,6 +75,12 @@ function writeUpstreamHeaders(response, upstreamResponse) {
 const server = http.createServer(async (request, response) => {
   setCorsHeaders(response, request);
 
+  if (request.url === "/" || request.url === "/health") {
+    response.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    response.end(JSON.stringify({ ok: true, proxyPrefix, targetOrigin, targetPrefix }));
+    return;
+  }
+
   if (request.method === "OPTIONS") {
     response.writeHead(204);
     response.end();
