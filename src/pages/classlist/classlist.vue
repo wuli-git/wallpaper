@@ -13,6 +13,10 @@
 		<view class="loadingLayout" v-if="classList.length || noData">
 			<uni-load-more :status="noData?'noMore':'loading'"></uni-load-more>
 		</view>
+
+		<view class="loadingLayout error" v-if="loadError">
+			加载失败，请稍后重试
+		</view>
 	</view>
 </template>
 
@@ -29,6 +33,7 @@
 	//分类列表数据
 	const classList = ref([]);
 	const noData=ref(false);
+	const loadError=ref(false);
 	//定义data参数
 	const queryParams={
 		pageNum:1,
@@ -54,15 +59,23 @@
 	
 	//获取分类列表网络数据
 	const getClassList = async () => {
-		let res;
-		if(queryParams.classid)
-		 res = await apiGetClassList(queryParams);
-		if(queryParams.type)
-		res = await apiGetHistoryList(queryParams);
-		classList.value = [...classList.value , ...res.data];
-		if(queryParams.pageSize > res.data.length)
+		try{
+			loadError.value=false;
+			let res;
+			if(queryParams.classid)
+			 res = await apiGetClassList(queryParams);
+			if(queryParams.type)
+			res = await apiGetHistoryList(queryParams);
+			const list = res?.data || [];
+			classList.value = [...classList.value , ...list];
+			if(queryParams.pageSize > list.length)
+				noData.value=true;
+			uni.setStorageSync("storageClassList",classList.value);
+		}catch(err){
+			console.error('getClassList failed', err);
+			loadError.value=true;
 			noData.value=true;
-		uni.setStorageSync("storageClassList",classList.value);
+		}
 	}
 	
 	onUnload(()=>{
@@ -72,6 +85,12 @@
 
 <style lang="scss" scoped> 
 	.classlist {
+		.error {
+			padding: 40rpx 0;
+			text-align: center;
+			color: #999;
+			font-size: 28rpx;
+		}
 		.content {
 			display: grid;
 			grid-template-columns: repeat(3, 1fr);

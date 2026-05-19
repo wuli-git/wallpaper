@@ -2,6 +2,20 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://tea.qingnian8.com
 const ACCESS_KEY = '1328433750wuli@';
 const USE_PROXY = Boolean(import.meta.env.VITE_API_BASE_URL);
 
+function appendQuery(url, data = {}) {
+	const params = new URLSearchParams();
+	Object.keys(data).forEach(key => {
+		const value = data[key];
+		if (value !== undefined && value !== null && value !== '') {
+			params.append(key, value);
+		}
+	});
+	const query = params.toString();
+	if (!query) return url;
+	const separator = url.includes('?') ? '&' : '?';
+	return `${url}${separator}${query}`;
+}
+
 export function request(config={}){	
 	let {
 		url,
@@ -11,6 +25,11 @@ export function request(config={}){
 	} = config
 	
 	url = BASE_URL+url
+
+	if (method.toUpperCase() === 'GET') {
+		url = appendQuery(url, data);
+		data = {};
+	}
 
 	// #ifdef H5
 	if (!USE_PROXY) {
